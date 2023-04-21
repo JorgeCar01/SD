@@ -2,16 +2,15 @@ import math
 import time
 from threading import Thread
 
-import numpy as np
-import cv2
+import matplotlib.pyplot as plt
 
-from crazyflie import Crazyflie
-from cflib.crazyflie import PositionHlCommander
+
+from cflib.crazyflie import Crazyflie
 from cflib.crazyflie.syncCrazyflie import SyncCrazyflie
 from cflib.positioning.position_hl_commander import PositionHlCommander
 
-# Import your custom functions from the other file
-from your_image_processing_file import get_image, detect_people
+# Import the functions from the model
+#from *** import get_image, detect_people
 
 # Change this URI to your Crazyflie's radio address
 URI = 'radio://0/80/2M/E7E7E7E7E7'
@@ -52,24 +51,37 @@ def main():
 
     camera_thread.join()
 
-# Function to display images with detected people
+
+# Function to display images only when a person is detected, with detection
 def display_camera_images():
     while True:
         img = get_image()
         people = detect_people(img)
-        
-        # Draw bounding boxes around detected people
-        for detection in people:
-            x, y, w, h = detection
-            cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        cv2.imshow('Camera View', img)
-        key = cv2.waitKey(1) & 0xFF
+        if len(people) > 0:
+            # Draw bounding boxes around detected people
+            for detection in people:
+                x, y, w, h = detection
+                plt.gca().add_patch(plt.Rectangle((x, y), w, h, linewidth=2, edgecolor='g', facecolor='none'))
+
+            # Display the image
+            plt.imshow(img)
+            plt.axis('off')
+            plt.title('Camera View')
+            plt.show(block=False)
+            print("Press 'q' to continue.")
+            plt.pause(0.1)
+
+            # Close the image window and clear the plot
+            plt.close()
+            plt.clf()
 
         # Press 'q' to exit the display loop
+        key = plt.waitforbuttonpress()
         if key == ord('q'):
-            cv2.destroyAllWindows()
+            plt.close('all')
             break
+
 
 if __name__ == '__main__':
     main()
